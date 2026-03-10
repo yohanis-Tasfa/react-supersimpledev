@@ -7,24 +7,59 @@
     <div class="js-container"></div>
     <script src="https://unpkg.com/supersimpledev/react.js"></script>
     <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
-
+    <script src="https://unpkg.com/supersimpledev/chatbot.js"></script>
     <script src="https://unpkg.com/supersimpledev/babel.js"></script>
     <script type="text/babel">
-      function ChatInput() {
+      // chatinput comonent
+      function ChatInput({ chatmessages, setChatMessages }) {
+        const [inputText, setInputText] = React.useState("");
+
+        // capture text written in input field
         function saveInputText(event) {
-          console.log(event.target.value);
+          setInputText(event.target.value);
         }
+
+        // display message on page
+        function sendMessage() {
+          const newChatMessage = [
+            ...chatmessages, // copy the original of chatmessages before update
+            {
+              message: inputText,
+              sender: "user",
+              id: crypto.randomUUID(),
+            },
+          ];
+
+          setChatMessages(newChatMessage);
+
+          // RESPONSE PART
+          const response = Chatbot.getResponse(inputText);
+          setChatMessages([
+            ...newChatMessage, // copy the updated  chatmessages before update
+            {
+              message: response,
+              sender: "robot",
+              id: crypto.randomUUID(),
+            },
+          ]);
+
+          setInputText(""); //after send the text make input field empty
+        }
+
         return (
           <>
             <input
               placeholder="send a message to chatbot"
               size="30"
-              onChange={saveInputText}
+              onChange={saveInputText} // to capture the value written in nput box
+              value={inputText}
             />
-            <button>send</button>
+            <button onClick={sendMessage}>send</button>
           </>
         );
       }
+
+      // chatmessage component
 
       function ChatMessage(props) {
         // const message = props.message;
@@ -51,7 +86,26 @@
         );
       }
 
-      function ChatMessages() {
+      // chat messages component
+
+      function ChatMessages({ chatmessages }) {
+        return (
+          <>
+            {chatmessages.map((chatmessage) => {
+              return (
+                <ChatMessage
+                  message={chatmessage.message}
+                  sender={chatmessage.sender}
+                  key={chatmessage.id}
+                />
+              );
+            })}
+          </>
+        );
+      }
+
+      // app component
+      function App() {
         const [chatmessages, setChatMessages] = React.useState([
           {
             message: "hello chatbot",
@@ -75,38 +129,13 @@
           },
         ]);
 
-        function sendMessages() {
-          setChatMessages([
-            ...chatmessages, // copy the original of chatmessages before update
-            {
-              message: "test",
-              sender: "user",
-              id: crypto.randomUUID(),
-            },
-          ]);
-        }
-
         return (
           <>
-            <button onClick={sendMessages}>send message</button>
-            {chatmessages.map((chatmessage) => {
-              return (
-                <ChatMessage
-                  message={chatmessage.message}
-                  sender={chatmessage.sender}
-                  key={chatmessage.id}
-                />
-              );
-            })}
-          </>
-        );
-      }
-
-      function App() {
-        return (
-          <>
-            <ChatInput />
-            <ChatMessages />
+            <ChatInput
+              chatmessages={chatmessages}
+              setChatMessages={setChatMessages}
+            />
+            <ChatMessages chatmessages={chatmessages} />
           </>
         );
       }
