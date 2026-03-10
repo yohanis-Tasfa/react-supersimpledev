@@ -44,14 +44,62 @@
         );
       }
 
+      function ChatMessages() {
+        const [chatmessages, setChatMessages] = React.useState([
+          {
+            message: "hello chatbot",
+            sender: "user",
+            id: 1,
+          },
+          {
+            message: "hello how can i help you",
+            sender: "robot",
+            id: 2,
+          },
+          {
+            message: "can you get me todays date?",
+            sender: "user",
+            id: 3,
+          },
+          {
+            message: "today is september march 10",
+            sender: "robot",
+            id: 4,
+          },
+        ]);
+
+        function sendMessages() {
+          setChatMessages([
+            ...chatmessages, // copy the original of chatmessages before update
+            {
+              message: "test",
+              sender: "user",
+              id: crypto.randomUUID(),
+            },
+          ]);
+        }
+
+        return (
+          <>
+            <button onClick={sendMessages}>send message</button>
+            {chatmessages.map((chatmessage) => {
+              return (
+                <ChatMessage
+                  message={chatmessage.message}
+                  sender={chatmessage.sender}
+                  key={chatmessage.id}
+                />
+              );
+            })}
+          </>
+        );
+      }
+
       function App() {
         return (
           <>
             <ChatInput />
-            <ChatMessage message="hello chatbot" sender="user" />
-            <ChatMessage message="hello how can i help you" sender="robot" />
-            <ChatMessage message="can you get me todays date?" sender="user" />
-            <ChatMessage message="today is september march 10" sender="robot" />
+            <ChatMessages />
           </>
         );
       }
