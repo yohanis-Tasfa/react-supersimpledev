@@ -3,6 +3,73 @@
   <head>
     <title>Chatbot</title>
   </head>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .send-button {
+      background-color: rgb(25, 135, 84);
+      cursor: pointer;
+      color: white;
+      padding: 12px 20px;
+      margin-left: 10px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+    .chat-input {
+      padding: 12px 15px;
+      border-radius: 10px;
+      border-width: 1px;
+      font-size: 15px;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+    .chat-input-cotainer {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .app-container {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-message-user {
+      display: flex;
+      justify-content: end;
+      align-items: start;
+    }
+    .chat-message-robot {
+      display: flex;
+      align-items: start;
+    }
+    .chat-message-text {
+      background-color: rgb(238, 238, 238);
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-right: 10px;
+      margin-left: 10px;
+      margin-bottom: 20px;
+      max-width: 300px;
+    }
+    .chat-message-profile {
+      width: 45px;
+    }
+    .chat-messages-container {
+      flex-grow: 1;
+      margin-top: 20px;
+    }
+  </style>
+
   <body>
     <div class="js-container"></div>
     <script src="https://unpkg.com/supersimpledev/react.js"></script>
@@ -47,15 +114,18 @@
         }
 
         return (
-          <>
+          <div className="chat-input-cotainer">
             <input
+              className="chat-input"
               placeholder="send a message to chatbot"
               size="30"
               onChange={saveInputText} // to capture the value written in nput box
               value={inputText}
             />
-            <button onClick={sendMessage}>send</button>
-          </>
+            <button className="send-button" onClick={sendMessage}>
+              send
+            </button>
+          </div>
         );
       }
 
@@ -78,10 +148,19 @@
       */
 
         return (
-          <div>
-            {sender === "robot" && <img src="robot.png" alt="" width="50" />}
-            {message}
-            {sender === "user" && <img src="./user.png" alt="" width="50" />}
+          <div
+            className={
+              sender === "user" ? "chat-message-user" : "chat-message-robot"
+            }
+          >
+            {sender === "robot" && (
+              <img src="robot.png" alt="" className="chat-message-profile" />
+            )}
+            <div className="chat-message-text">{message}</div>
+
+            {sender === "user" && (
+              <img src="./user.png" alt="" className="chat-message-profile" />
+            )}
           </div>
         );
       }
@@ -90,7 +169,7 @@
 
       function ChatMessages({ chatmessages }) {
         return (
-          <>
+          <div className="chat-messages-container">
             {chatmessages.map((chatmessage) => {
               return (
                 <ChatMessage
@@ -100,43 +179,33 @@
                 />
               );
             })}
-          </>
+          </div>
         );
       }
 
       // app component
       function App() {
-        const [chatmessages, setChatMessages] = React.useState([
-          {
-            message: "hello chatbot",
-            sender: "user",
-            id: 1,
-          },
-          {
-            message: "hello how can i help you",
-            sender: "robot",
-            id: 2,
-          },
-          {
-            message: "can you get me todays date?",
-            sender: "user",
-            id: 3,
-          },
-          {
-            message: "today is september march 10",
-            sender: "robot",
-            id: 4,
-          },
-        ]);
+        const [chatmessages, setChatMessages] = React.useState([]);
+
+        // USE THIS TO DISPLAY AGAIN AFTER REFRESH
+
+        /* const [chatmessages, setChatMessages] = React.useState(() => {
+          const saved = localStorage.getItem("chatmessages");
+          return saved ? JSON.parse(saved) : [];
+        });
+
+        React.useEffect(() => {
+          localStorage.setItem("chatmessages", JSON.stringify(chatmessages));
+        }, [chatmessages]);*/
 
         return (
-          <>
+          <div className="app-container">
+            <ChatMessages chatmessages={chatmessages} />
             <ChatInput
               chatmessages={chatmessages}
               setChatMessages={setChatMessages}
             />
-            <ChatMessages chatmessages={chatmessages} />
-          </>
+          </div>
         );
       }
 
