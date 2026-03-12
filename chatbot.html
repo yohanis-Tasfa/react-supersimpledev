@@ -67,6 +67,39 @@
     .chat-messages-container {
       flex-grow: 1;
       margin-top: 20px;
+      overflow: scroll;
+      scrollbar-width: none;
+    }
+    /* LOADING ANIMATION */
+
+    .loading-dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin: 0 3px;
+      background: #666;
+      border-radius: 50%;
+      animation: loading 1.4s infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .loading-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes loading {
+      0% {
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.2;
+      }
     }
   </style>
 
@@ -80,6 +113,7 @@
       // chatinput comonent
       function ChatInput({ chatmessages, setChatMessages }) {
         const [inputText, setInputText] = React.useState("");
+        const [isLoading, setIsLoading] = React.useState(false);
 
         // capture text written in input field
         function saveInputText(event) {
@@ -88,29 +122,54 @@
 
         // display message on page
         function sendMessage() {
-          const newChatMessage = [
-            ...chatmessages, // copy the original of chatmessages before update
-            {
-              message: inputText,
-              sender: "user",
-              id: crypto.randomUUID(),
-            },
+          if (!inputText.trim()) return;
+
+          const userMessage = {
+            message: inputText,
+            sender: "user",
+            id: crypto.randomUUID(),
+          };
+
+          const loadingMessage = {
+            message: "loading",
+            sender: "robot",
+            id: "loading",
+          };
+
+          const updatedMessages = [
+            ...chatmessages,
+            userMessage,
+            loadingMessage,
           ];
 
-          setChatMessages(newChatMessage);
+          setChatMessages(updatedMessages);
+          setInputText("");
+          setIsLoading(true);
 
-          // RESPONSE PART
-          const response = Chatbot.getResponse(inputText);
-          setChatMessages([
-            ...newChatMessage, // copy the updated  chatmessages before update
-            {
-              message: response,
-              sender: "robot",
-              id: crypto.randomUUID(),
-            },
-          ]);
+          setTimeout(() => {
+            const response = Chatbot.getResponse(inputText);
 
-          setInputText(""); //after send the text make input field empty
+            const newMessages = updatedMessages.map((msg) =>
+              msg.id === "loading"
+                ? {
+                    message: response,
+                    sender: "robot",
+                    id: crypto.randomUUID(),
+                  }
+                : msg,
+            );
+
+            setChatMessages(newMessages);
+            setIsLoading(false);
+          }, 1000); // 1 second loading
+        }
+
+        // function for enter key
+
+        function handleKeyDown(event) {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
         }
 
         return (
@@ -120,6 +179,7 @@
               placeholder="send a message to chatbot"
               size="30"
               onChange={saveInputText} // to capture the value written in nput box
+              onKeyDown={handleKeyDown}
               value={inputText}
             />
             <button className="send-button" onClick={sendMessage}>
@@ -131,22 +191,7 @@
 
       // chatmessage component
 
-      function ChatMessage(props) {
-        // const message = props.message;
-        // const sender = props.sender;
-
-        const { message, sender } = props; // destructuring
-
-        /*  if (sender === "robot") {
-          return (
-            <div>
-              <img src="robot.png" alt="" width="50" />
-              {message}
-            </div>
-          );
-        }
-      */
-
+      function ChatMessage({ message, sender }) {
         return (
           <div
             className={
@@ -154,12 +199,23 @@
             }
           >
             {sender === "robot" && (
-              <img src="robot.png" alt="" className="chat-message-profile" />
+              <img src="robot.png" className="chat-message-profile" />
             )}
-            <div className="chat-message-text">{message}</div>
+
+            <div className="chat-message-text">
+              {message === "loading" ? (
+                <span className="loading-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
+              ) : (
+                message
+              )}
+            </div>
 
             {sender === "user" && (
-              <img src="./user.png" alt="" className="chat-message-profile" />
+              <img src="./user.png" className="chat-message-profile" />
             )}
           </div>
         );
@@ -168,8 +224,17 @@
       // chat messages component
 
       function ChatMessages({ chatmessages }) {
+        const chatMessagesRef = React.useRef(null);
+
+        React.useEffect(() => {
+          const containerElem = chatMessagesRef.current;
+          if (containerElem) {
+            containerElem.scrollTop = containerElem.scrollHeight;
+          }
+        }, [chatmessages]);
+
         return (
-          <div className="chat-messages-container">
+          <div className="chat-messages-container" ref={chatMessagesRef}>
             {chatmessages.map((chatmessage) => {
               return (
                 <ChatMessage
@@ -190,13 +255,13 @@
         // USE THIS TO DISPLAY AGAIN AFTER REFRESH
 
         /* const [chatmessages, setChatMessages] = React.useState(() => {
-          const saved = localStorage.getItem("chatmessages");
-          return saved ? JSON.parse(saved) : [];
-        });
+                const saved = localStorage.getItem("chatmessages");
+                return saved ? JSON.parse(saved) : [];
+              });
 
-        React.useEffect(() => {
-          localStorage.setItem("chatmessages", JSON.stringify(chatmessages));
-        }, [chatmessages]);*/
+              React.useEffect(() => {
+                localStorage.setItem("chatmessages", JSON.stringify(chatmessages));
+              }, [chatmessages]);*/
 
         return (
           <div className="app-container">
